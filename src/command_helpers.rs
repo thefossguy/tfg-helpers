@@ -38,6 +38,21 @@ pub fn get_command_argv(command: &Command) -> Vec<String> {
     argv
 }
 
+pub fn return_stderr_as_err(
+    base_message: impl AsRef<str> + std::fmt::Display,
+    process_output_result: &Result<Output, io::Error>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match process_output_result {
+        Ok(process_output) => Err(format!(
+            "{}{}",
+            base_message,
+            crate::get_process_stderr!(process_output)
+        )
+        .into()),
+        Err(e) => Err(format!("{base_message}{}", crate::make_formatted_error!(e)).into()),
+    }
+}
+
 #[macro_export]
 macro_rules! log_then_output {
     ($command:expr, $formatter:path) => {{
