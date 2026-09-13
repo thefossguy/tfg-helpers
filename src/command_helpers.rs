@@ -38,21 +38,6 @@ pub fn get_command_argv(command: &Command) -> Vec<String> {
     argv
 }
 
-pub fn return_stderr_as_err(
-    base_message: impl AsRef<str> + std::fmt::Display,
-    process_output_result: &Result<Output, io::Error>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    match process_output_result {
-        Ok(process_output) => Err(format!(
-            "{}{}",
-            base_message,
-            crate::get_process_stderr!(process_output)
-        )
-        .into()),
-        Err(e) => Err(format!("{base_message}{}", crate::make_formatted_error!(e)).into()),
-    }
-}
-
 #[macro_export]
 macro_rules! log_then_output {
     ($command:expr, $formatter:path) => {{
@@ -121,6 +106,24 @@ macro_rules! make_formatted_error {
     ($passed_error:expr) => {
         format!("\n```\n{}\n```", $passed_error)
     };
+}
+
+#[macro_export]
+macro_rules! return_stderr_as_err {
+    ($base_error_message:expr, $process_output_result:expr) => {{
+        // Re-assign in case the `$base_error_message` is not an identifier.
+        let base_error_message = $base_error_message;
+        match $process_output_result {
+            Ok(process_output) => Err(format!(
+                "{base_error_message}{}",
+                $crate::get_formatted_process_stderr!(process_output)
+            )
+            .into()),
+            Err(e) => {
+                Err(format!("{base_error_message}{}", $crate::make_formatted_error!(e)).into())
+            }
+        }
+    }};
 }
 
 #[cfg(test)]
