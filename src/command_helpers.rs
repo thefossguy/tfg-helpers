@@ -5,26 +5,27 @@ pub trait CommandOutputStatus {
     fn was_process_successful(&self) -> bool;
 }
 
-impl CommandOutputStatus for &Result<Output, io::Error> {
-    fn was_process_successful(&self) -> bool {
-        match self {
-            Err(_) => false,
-            Ok(process_result) => match process_result.status.code() {
-                None => false,
-                Some(process_exit_code) => process_exit_code == 0,
-            },
-        }
+trait HasExitStatus {
+    fn exit_status(&self) -> &ExitStatus;
+}
+
+impl HasExitStatus for Output {
+    fn exit_status(&self) -> &ExitStatus {
+        &self.status
     }
 }
 
-impl CommandOutputStatus for &Result<ExitStatus, io::Error> {
+impl HasExitStatus for ExitStatus {
+    fn exit_status(&self) -> &Self {
+        self
+    }
+}
+
+impl<T: HasExitStatus> CommandOutputStatus for Result<T, io::Error> {
     fn was_process_successful(&self) -> bool {
         match self {
             Err(_) => false,
-            Ok(process_exit_status) => match process_exit_status.code() {
-                None => false,
-                Some(process_exit_code) => process_exit_code == 0,
-            },
+            Ok(inner) => matches!(inner.exit_status().code(), Some(0)),
         }
     }
 }
