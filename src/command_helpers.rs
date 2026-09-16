@@ -103,6 +103,16 @@ macro_rules! log_then_status {
 }
 
 #[macro_export]
+macro_rules! verified_log_then_output {
+    ($command:expr) => {{
+        let verify_command_program_status: Result<(), Box<dyn std::error::Error>> =
+            $crate::verify_command_program!(&$command);
+        verify_command_program_status?;
+        $crate::log_then_output!($command)
+    }};
+}
+
+#[macro_export]
 macro_rules! get_process_stdout {
     ($process_output:expr) => {
         String::from_utf8_lossy(&$process_output.stdout)
