@@ -176,6 +176,7 @@ macro_rules! return_stderr_as_err {
 mod tests {
     use super::*;
     use std::assert_matches;
+    use std::io;
     use std::process::Command;
 
     #[test]
@@ -183,7 +184,7 @@ mod tests {
         let mut cmd = Command::new("command-will-never-exist");
         let cmd_output = cmd.output();
         assert_eq!(false, (&cmd_output).was_process_successful());
-        assert_matches!(cmd_output, Err(e) if e.kind() == std::io::ErrorKind::NotFound);
+        assert_matches!(cmd_output, Err(e) if e.kind() == io::ErrorKind::NotFound);
     }
 
     #[test]
@@ -191,7 +192,7 @@ mod tests {
         let mut cmd = Command::new("command-will-never-exist");
         let cmd_status = cmd.status();
         assert_eq!(false, (&cmd_status).was_process_successful());
-        assert_matches!(cmd_status, Err(e) if e.kind() == std::io::ErrorKind::NotFound);
+        assert_matches!(cmd_status, Err(e) if e.kind() == io::ErrorKind::NotFound);
     }
 
     #[test]
