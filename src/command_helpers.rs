@@ -52,16 +52,8 @@ macro_rules! log_then_output {
 
 #[macro_export]
 macro_rules! log_then_status {
-    ($command:expr, $formatter:path) => {{
-        $formatter!(
-            "Running: {:?}",
-            $crate::command_helpers::get_command_argv(&$command)
-        );
-        $command.status()
-    }};
-
     ($command:expr) => {{
-        eprintln!(
+        $crate::log_info!(
             "Running: {:?}",
             $crate::command_helpers::get_command_argv(&$command)
         );
