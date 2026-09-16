@@ -40,6 +40,47 @@ pub fn get_command_argv(command: &Command) -> Vec<String> {
 }
 
 #[macro_export]
+macro_rules! verify_command_program {
+    ($command:expr) => {{
+        let base_program = $command.get_program();
+        let Some(program) = base_program.to_str() else {
+            return $crate::return_formatted_err!(
+                "Could not convert the type 'OsStr' to type 'str' for value '{base_program:?}'"
+            );
+        };
+
+        if program.contains('/') {
+            if std::path::Path::new(&program).exists() {
+                Ok(())
+            } else {
+                $crate::return_formatted_err!("The program '{program}' does not exist")
+            }
+        } else {
+            let Some(env_path) = std::env::var_os("PATH") else {
+                return $crate::return_formatted_err!("Could not get the value of '$PATH'");
+            };
+
+            if std::env::split_paths(&env_path)
+                .find_map(|dir_in_path_as_pathbuf| {
+                    let dir_in_path = if dir_in_path_as_pathbuf.as_os_str().is_empty() {
+                        std::path::PathBuf::from(".")
+                    } else {
+                        dir_in_path_as_pathbuf
+                    };
+                    let maybe_exists = dir_in_path.join(program);
+                    maybe_exists.exists().then_some(maybe_exists)
+                })
+                .is_some()
+            {
+                Ok(())
+            } else {
+                $crate::return_formatted_err!("The program '{program}' does not exist in '$PATH'")
+            }
+        }
+    }};
+}
+
+#[macro_export]
 macro_rules! log_then_output {
     ($command:expr) => {{
         $crate::log_info!(
