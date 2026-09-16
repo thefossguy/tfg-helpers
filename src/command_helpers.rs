@@ -41,16 +41,8 @@ pub fn get_command_argv(command: &Command) -> Vec<String> {
 
 #[macro_export]
 macro_rules! log_then_output {
-    ($command:expr, $formatter:path) => {{
-        $formatter!(
-            "Running: {:?}",
-            $crate::command_helpers::get_command_argv(&$command)
-        );
-        $command.output()
-    }};
-
     ($command:expr) => {{
-        eprintln!(
+        $crate::log_info!(
             "Running: {:?}",
             $crate::command_helpers::get_command_argv(&$command)
         );
